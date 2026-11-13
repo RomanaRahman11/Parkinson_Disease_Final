@@ -1,0 +1,35 @@
+[
+  {
+    "modality": "voice",
+    "selected_family": "RBF_SVM",
+    "development_selection_procedure_balanced_accuracy": 0.6944444444444444,
+    "retrospective_holdout_balanced_accuracy": 0.75,
+    "issues": [],
+    "research_only": true,
+    "clinically_validated": false
+  },
+  {
+    "modality": "spiral",
+    "selected_family": "GradientBoosting",
+    "development_selection_procedure_balanced_accuracy": 0.725,
+    "retrospective_holdout_balanced_accuracy": 0.8,
+    "issues": [
+      "ACQUISITION_CONFOUNDING_UNRESOLVED",
+      "PERSON_IDENTITY_UNVERIFIED"
+    ],
+    "research_only": true,
+    "clinically_validated": false
+  },
+  {
+    "modality": "mri",
+    "selected_family": "MedicalNet_Global_LR",
+    "development_selection_procedure_balanced_accuracy": 0.45,
+    "retrospective_holdout_balanced_accuracy": 0.5357142857142857,
+    "issues": [
+      "DEVELOPMENT_NOT_ABOVE_CHANCE",
+      "ANATOMICAL_QC_PENDING"
+    ],
+    "research_only": true,
+    "clinically_validated": false
+  }
+]

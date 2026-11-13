@@ -1,0 +1,56 @@
+{
+  "version": "MRI8-integrated-1",
+  "reference_grid": {
+    "size": [
+      99,
+      117,
+      95
+    ],
+    "spacing": [
+      2.0,
+      2.0,
+      2.0
+    ],
+    "origin": [
+      98.0,
+      134.0,
+      -72.0
+    ],
+    "direction": [
+      -1.0,
+      0.0,
+      0.0,
+      0.0,
+      -1.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "orientation": "canonical RAS XYZ network spatial axes",
+  "input_shape": [
+    96,
+    112,
+    96
+  ],
+  "normalization": "own nonzero foreground z-score, clip [-5,5], background zero",
+  "global_pool": "mean and max",
+  "regional_pool": [
+    2,
+    2,
+    2
+  ],
+  "module_hash": "7f021972249a4bde2b7c4a031d83edb23e11b453b3ca026c7d9208ba1ec1bd75",
+  "assets": {
+    "source_commit": "18c8bb6cd564eb1b964bffef1f4c2283f1ae6e7b",
+    "checkpoint_revision": "758fe285bc8ab565eb4f9f965810f1d1a3f79491",
+    "license": "MIT",
+    "PD_specific": false,
+    "pretraining_overlap_independently_verified": false,
+    "loaded_tensors": 102,
+    "missing_only_bn_counters": [],
+    "source_hash": "b2027785ff2fcfb86147c75509d0abc272edeb820bfca6ce9ba56cd122b768ca",
+    "weights_hash": "61224f9317fcce873366deb3703183e92cc47325b726b69691b33536244e10f4"
+  }
+}

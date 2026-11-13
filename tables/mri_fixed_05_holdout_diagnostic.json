@@ -1,0 +1,22 @@
+{
+  "n": 11,
+  "accuracy": 0.5454545454545454,
+  "balanced_accuracy": 0.5357142857142857,
+  "sensitivity": 0.5714285714285714,
+  "specificity": 0.5,
+  "precision": 0.6666666666666666,
+  "f1": 0.6153846153846154,
+  "roc_auc": 0.5357142857142857,
+  "average_precision": 0.7511904761904762,
+  "mcc": 0.06900655593423542,
+  "brier": 0.2608195599666873,
+  "log_loss": 0.7092105705304186,
+  "tn": 2,
+  "fp": 2,
+  "fn": 3,
+  "tp": 4,
+  "threshold": 0.5,
+  "accuracy_ci_low": 0.23379359765934518,
+  "accuracy_ci_high": 0.8325119059362929,
+  "interpretation": "Secondary diagnostic only; does not select threshold"
+}

@@ -1,0 +1,118 @@
+{
+  "version": "9.0",
+  "n4_iterations": [
+    30,
+    20,
+    10
+  ],
+  "n4_estimation_shrink": [
+    2,
+    2,
+    2
+  ],
+  "bias_application": "native full-resolution grid before registration",
+  "registration": "masked rigid Euler3D; mask-moment initialization",
+  "metric": "MattesMutualInformation",
+  "metric_bins": 40,
+  "sampling": "RANDOM",
+  "sampling_fraction": 0.25,
+  "seed": 42,
+  "optimizer": "RegularStepGradientDescent",
+  "learning_rate": 1.0,
+  "min_step": 0.0001,
+  "iterations": 250,
+  "relaxation_factor": 0.6,
+  "optimizer_scales": "physical_shift",
+  "pyramid_shrink": [
+    4,
+    2,
+    1
+  ],
+  "pyramid_smoothing_mm": [
+    2,
+    1,
+    0
+  ],
+  "interpolator": "linear",
+  "mask_interpolator": "nearest",
+  "normalization": {
+    "percentiles": [
+      1,
+      99
+    ],
+    "scope": "subject own aligned brain mask",
+    "clip": [
+      0,
+      1
+    ],
+    "background": 0
+  },
+  "array_order": "SimpleITK GetArrayFromImage: z,y,x; physical reference grid recorded separately",
+  "reference_grid": {
+    "size": [
+      99,
+      117,
+      95
+    ],
+    "spacing": [
+      2.0,
+      2.0,
+      2.0
+    ],
+    "origin": [
+      98.0,
+      134.0,
+      -72.0
+    ],
+    "direction": [
+      -1.0,
+      0.0,
+      0.0,
+      0.0,
+      -1.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "slice_sampling": {
+    "fractions": [
+      0.25,
+      0.75
+    ],
+    "frozen_per_axis": 8,
+    "cnn_per_axis": 3,
+    "resize": [
+      224,
+      224
+    ],
+    "cnn_resize": [
+      160,
+      160
+    ],
+    "imagenet_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "imagenet_std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "synthstrip_command": "python mri_synthstrip -i INPUT -o BRAIN -m MASK --model WEIGHTS --threads 2",
+  "assets": {
+    "mri_synthstrip": "291c253ab2f7c0cbcb84afa769ae10909549537e727db5b92d268754b7cc7871",
+    "synthstrip.1.pt": "37417f802196186441aae3e7f385d94f8a98c64a88acaeaa2723af995c653e33",
+    "mni_t1_2mm.nii.gz": "862fb2c3b57a25a4b4b118175f0b7867f71379088b551ae11942fcc8f98f2bf6",
+    "mni_mask_2mm.nii.gz": "54c84931c95918ed4257798603b5f2d0cd8d32a0b9f1b101e35c2aeeae531b5a"
+  },
+  "software": {
+    "numpy": "2.1.3",
+    "nibabel": "5.4.2",
+    "SimpleITK": "2.5.6"
+  },
+  "implementation_sha256": "b8a95708535e9880735432f9cab56f64ac772c9bc759bb0810e4be21fa34cfd8"
+}

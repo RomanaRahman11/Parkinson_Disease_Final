@@ -1,0 +1,37 @@
+{
+  "mri_shape": [
+    95,
+    117,
+    99
+  ],
+  "spiral_resampling_points": 256,
+  "protocol_hash": "5a2e682b9f55dedcbc5fe8c046850b81edeb8623fc5398f23cec0c2fe1a69ee0",
+  "reference_grid": {
+    "size": [
+      99,
+      117,
+      95
+    ],
+    "spacing": [
+      2.0,
+      2.0,
+      2.0
+    ],
+    "origin": [
+      98.0,
+      134.0,
+      -72.0
+    ],
+    "direction": [
+      -1.0,
+      0.0,
+      0.0,
+      0.0,
+      -1.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  }
+}

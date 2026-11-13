@@ -1,0 +1,12 @@
+{
+  "publication_ready": false,
+  "clinical_validated": false,
+  "external_validation": false,
+  "paired_fusion": false,
+  "anatomical_qc": "PENDING independently documented review",
+  "spiral_acquisition_confounding": "UNRESOLVED",
+  "test_previously_viewed": true,
+  "scores_calibrated": false,
+  "accuracy_guaranteed": false,
+  "spiral_identity_verified": false
+}

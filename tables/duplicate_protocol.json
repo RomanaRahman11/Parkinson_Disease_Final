@@ -1,0 +1,9 @@
+{
+  "relative_feature_tolerance": 0.0001,
+  "mri_correlation": 0.9999,
+  "mri_nrmse": 0.002,
+  "review_csv": "None",
+  "exact_source_duplicates": "stop",
+  "near_candidates": "documented identity review",
+  "no_accuracy_driven_exclusion": true
+}

@@ -1,0 +1,11 @@
+{
+  "source_commit": "18c8bb6cd564eb1b964bffef1f4c2283f1ae6e7b",
+  "checkpoint_revision": "758fe285bc8ab565eb4f9f965810f1d1a3f79491",
+  "license": "MIT",
+  "PD_specific": false,
+  "pretraining_overlap_independently_verified": false,
+  "loaded_tensors": 102,
+  "missing_only_bn_counters": [],
+  "source_hash": "b2027785ff2fcfb86147c75509d0abc272edeb820bfca6ce9ba56cd122b768ca",
+  "weights_hash": "61224f9317fcce873366deb3703183e92cc47325b726b69691b33536244e10f4"
+}

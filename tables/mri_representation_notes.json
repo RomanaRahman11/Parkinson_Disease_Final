@@ -1,0 +1,12 @@
+{
+  "spatial_grid": [
+    3,
+    4,
+    3
+  ],
+  "n_features": 262,
+  "anatomical_roi_volumes": false,
+  "atlas_used": false,
+  "foreground": "normalized intensity>0",
+  "limitations": "Contrast, brain size, age/sex and acquisition confounding unresolved; use only as candidate comparison."
+}

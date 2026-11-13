@@ -1,0 +1,12 @@
+family,param,threshold,inner_balanced_accuracy,inner_roc_auc,threshold_candidates,inner_ba_by_threshold,interpretation
+Voxel_LR,{'C': 0.01},0.5,0.40873015873015867,0.30753968253968256,[0.5],[0.40873015873015867],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+Voxel_LR,{'C': 0.1},0.5,0.43253968253968256,0.2896825396825397,[0.5],[0.43253968253968256],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+Voxel_LR,{'C': 1.0},0.5,0.40079365079365076,0.2916666666666667,[0.5],[0.40079365079365076],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+Voxel_SVM,{'C': 0.1},0.5,0.5,0.30357142857142855,[0.5],[0.5],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+Voxel_SVM,{'C': 1.0},0.5,0.41071428571428575,0.27777777777777773,[0.5],[0.41071428571428575],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+MedicalNet_Global_LR,"{'C': 0.01, 'percentile': 100}",0.5,0.5357142857142857,0.5337301587301587,[0.5],[0.5357142857142857],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+MedicalNet_Global_LR,"{'C': 0.1, 'percentile': 100}",0.5,0.49404761904761907,0.5079365079365079,[0.5],[0.49404761904761907],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+MedicalNet_Global_LR,"{'C': 1.0, 'percentile': 100}",0.5,0.5119047619047619,0.48214285714285715,[0.5],[0.5119047619047619],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+MedicalNet_Regional_LR,"{'C': 0.01, 'percentile': 100}",0.5,0.5,0.5416666666666666,[0.5],[0.5],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+MedicalNet_Regional_LR,"{'C': 0.1, 'percentile': 100}",0.5,0.5,0.5694444444444444,[0.5],[0.5],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+MedicalNet_Regional_LR,"{'C': 1.0, 'percentile': 100}",0.5,0.4761904761904762,0.5813492063492063,[0.5],[0.4761904761904762],"Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"

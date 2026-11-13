@@ -1,0 +1,55 @@
+[
+  {
+    "fold": 1,
+    "family": "Voxel_SVM",
+    "param": {
+      "C": 0.1
+    },
+    "threshold": 0.5,
+    "inner_balanced_accuracy": 0.5,
+    "inner_roc_auc": 0.08333333333333333,
+    "threshold_candidates": [
+      0.5
+    ],
+    "inner_ba_by_threshold": [
+      0.5
+    ],
+    "interpretation": "Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+  },
+  {
+    "fold": 2,
+    "family": "MedicalNet_Regional_LR",
+    "param": {
+      "C": 0.1,
+      "percentile": 100
+    },
+    "threshold": 0.5,
+    "inner_balanced_accuracy": 0.6361111111111111,
+    "inner_roc_auc": 0.42777777777777776,
+    "threshold_candidates": [
+      0.5
+    ],
+    "inner_ba_by_threshold": [
+      0.6361111111111111
+    ],
+    "interpretation": "Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+  },
+  {
+    "fold": 3,
+    "family": "MedicalNet_Global_LR",
+    "param": {
+      "C": 0.1,
+      "percentile": 100
+    },
+    "threshold": 0.5,
+    "inner_balanced_accuracy": 0.7166666666666667,
+    "inner_roc_auc": 0.5555555555555556,
+    "threshold_candidates": [
+      0.5
+    ],
+    "inner_ba_by_threshold": [
+      0.7166666666666667
+    ],
+    "interpretation": "Joint parameter/threshold tuning; inner score optimistic, outer evaluation required"
+  }
+]

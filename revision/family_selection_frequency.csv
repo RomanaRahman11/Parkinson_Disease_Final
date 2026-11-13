@@ -1,0 +1,14 @@
+modality,family,times_selected
+mri,MedicalNet_Global_LR,6
+mri,MedicalNet_Regional_LR,10
+mri,Voxel_LR,4
+mri,Voxel_SVM,10
+spiral,GradientBoosting,2
+spiral,LogisticRegression,3
+spiral,RBF_SVM,20
+spiral,RandomForest,4
+spiral,SoftVoting,1
+voice,GradientBoosting,1
+voice,LogisticRegression,18
+voice,RBF_SVM,7
+voice,RandomForest,4

@@ -1,0 +1,3 @@
+acq_stratum,control,PD
+median_dt<=8,11,0
+median_dt>8,1,20

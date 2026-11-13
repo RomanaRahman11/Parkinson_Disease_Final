@@ -1,0 +1,4 @@
+modality,majority_baseline_accuracy,majority_baseline_balanced_accuracy,selected_accuracy,selected_balanced_accuracy,one_class_predictions,status
+voice,0.75,0.5,0.875,0.75,False,TWO_CLASS_PREDICTIONS
+spiral,0.625,0.5,0.75,0.8,False,TWO_CLASS_PREDICTIONS
+mri,0.6363636363636364,0.5,0.5454545454545454,0.5357142857142857,False,TWO_CLASS_PREDICTIONS
