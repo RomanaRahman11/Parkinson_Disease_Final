@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.streamlit/secrets.toml
+# MedicalNet checkpoint (132 MB) is downloaded at run time; never commit it
+*.pth

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PD Audit · Subject-level validation of voice, spiral and MRI classifiers</title>
+<meta name="description" content="Project page: subject-level validation of independent voice, spiral-drawing and T1-weighted MRI classifiers for Parkinson's disease — an audit of small public cohorts.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3Cpath d='M32 14c-9 0-15 7-15 16 0 11 7 19 15 20 8-1 15-9 15-20 0-9-6-16-15-16z' fill='none' stroke='white' stroke-width='4'/%3E%3Cpath d='M32 16v32' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f6f8fb; --surface:#ffffff; --surface-2:#f1f5f9; --ink:#0f172a; --ink-2:#334155; --muted:#64748b;
+  --line:#e2e8f0; --brand:#2563eb; --brand-ink:#1d4ed8; --brand-soft:#eaf1fe;
+  --voice:#2563eb; --voice-soft:#eaf1fe; --spiral:#0d9488; --spiral-soft:#e4f5f2; --mri:#ea580c; --mri-soft:#fff0e5;
+  --good:#16a34a; --good-soft:#e8f6ec; --warn:#b45309; --warn-soft:#fef3c7; --bad:#dc2626; --bad-soft:#fdecec;
+  --null:#94a3b8; --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+  --side:#0b1530; --side-ink:#cbd5e1; --side-muted:#7c8aa8; --side-active:#ffffff;
+  --radius:16px; --sidew:272px;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0b1120; --surface:#111a2e; --surface-2:#16213a; --ink:#e5edf9; --ink-2:#c3cee0; --muted:#8b9ab5;
+  --line:#22304d; --brand:#60a5fa; --brand-ink:#93c5fd; --brand-soft:#16264a;
+  --voice:#60a5fa; --voice-soft:#16264a; --spiral:#2dd4bf; --spiral-soft:#0f2e2c; --mri:#fb923c; --mri-soft:#33200f;
+  --good:#4ade80; --good-soft:#123222; --warn:#fbbf24; --warn-soft:#33270b; --bad:#f87171; --bad-soft:#3a1616;
+  --null:#64748b; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  --side:#070d1c;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+code,pre{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+img{max-width:100%;display:block}
+button{font:inherit}
+
+/* ---------- sidebar ---------- */
+.sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidew);background:var(--side);color:var(--side-ink);
+  display:flex;flex-direction:column;padding:22px 16px 18px;z-index:40;transition:transform .25s}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 10px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#0d9488);display:grid;place-items:center;flex:none}
+.brand b{display:block;color:#fff;font-size:16px;letter-spacing:.2px}
+.brand span{font-size:12px;color:var(--side-muted)}
+.nav{margin-top:16px;display:flex;flex-direction:column;gap:2px;overflow:auto;flex:1}
+.nav .group{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--side-muted);padding:12px 12px 4px}
+.nav a{display:flex;align-items:center;gap:12px;padding:7px 12px;border-radius:10px;color:var(--side-ink);font-size:14.5px;font-weight:500;text-decoration:none;transition:background .15s,color .15s}
+.nav a svg{width:18px;height:18px;flex:none;opacity:.85}
+.nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav a.active{background:rgba(96,165,250,.16);color:var(--side-active)}
+.nav a.active svg{opacity:1}
+.side-foot{border-top:1px solid rgba(255,255,255,.08);padding-top:14px;display:flex;flex-direction:column;gap:8px}
+.side-foot .btn{justify-content:center}
+.status{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--side-muted);padding:2px 6px}
+.dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;flex:none}
+.dot.live{background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+
+/* ---------- topbar (mobile) ---------- */
+.topbar{display:none;position:sticky;top:0;z-index:30;background:var(--side);color:#fff;padding:12px 16px;align-items:center;justify-content:space-between}
+.icon-btn{background:transparent;border:1px solid var(--line);color:var(--ink);width:40px;height:40px;border-radius:10px;display:grid;place-items:center;cursor:pointer}
+.topbar .icon-btn{border-color:rgba(255,255,255,.18);color:#fff}
+.scrim{display:none}
+
+/* ---------- main ---------- */
+.main{margin-left:var(--sidew);min-height:100vh}
+.wrap{max-width:1120px;margin:0 auto;padding:0 40px}
+.toolbar{display:flex;justify-content:flex-end;gap:8px;padding:18px 40px 0;max-width:1200px;margin:0 auto}
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+h1{font-size:clamp(30px,4vw,46px);line-height:1.12;letter-spacing:-.02em;margin:14px 0 16px;font-weight:800}
+h2{font-size:clamp(24px,2.6vw,32px);letter-spacing:-.015em;margin:8px 0 10px;line-height:1.2}
+h3{font-size:18px;margin:0 0 6px}
+.lead{font-size:18px;color:var(--ink-2);max-width:780px;margin:0}
+.sub{color:var(--muted);margin:0 0 28px;max-width:760px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:12px;font-weight:600;font-size:15px;border:1px solid transparent;cursor:pointer;text-decoration:none!important;transition:transform .12s,box-shadow .2s,background .2s,border-color .2s;white-space:nowrap}
+.btn svg{width:18px;height:18px}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(37,99,235,.28)}
+[data-theme="dark"] .btn-primary{color:#0b1120}
+.btn-primary:hover{background:var(--brand-ink)}
+.btn-ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand)}
+.btn-side{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.12)}
+.btn-side:hover{background:rgba(255,255,255,.12)}
+.btn-side.primary{background:#2563eb;border-color:#2563eb}
+.btn[aria-disabled="true"]{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+
+/* hero */
+.hero{padding-top:28px}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+.badge.red{background:var(--bad-soft);border-color:transparent;color:var(--bad)}
+.badge.blue{background:var(--brand-soft);border-color:transparent;color:var(--brand)}
+.authors{margin:18px 0 0;font-size:16px;color:var(--ink-2)}
+.authors b{color:var(--ink)}
+.authors small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.notice{display:flex;gap:14px;align-items:flex-start;margin-top:30px;padding:16px 18px;border-radius:14px;background:var(--warn-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)}
+.notice svg{flex:none;color:var(--warn);margin-top:2px}
+.notice p{margin:0;font-size:14.5px}
+
+/* cards */
+.grid{display:grid;gap:18px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.stat{position:relative;overflow:hidden}
+.stat .k{font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:8px}
+.stat .v{font-size:38px;font-weight:800;letter-spacing:-.02em;margin:8px 0 4px;line-height:1}
+.stat .d{font-size:14px;color:var(--ink-2)}
+.stat .bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;margin-top:12px}
+.pill.ns{background:var(--surface-2);color:var(--muted)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+
+.cohort{display:flex;gap:18px;align-items:center}
+.cohort .ico{width:84px;height:84px;border-radius:18px;display:grid;place-items:center;flex:none;overflow:hidden}
+.cohort .ico img,.cohort .ico svg{width:70px;height:70px}
+.cohort .ico img.mri{width:84px;height:84px;object-fit:cover}
+.cohort h3{font-size:20px;margin:0}
+.cohort .meta{color:var(--muted);font-size:14px}
+.cohort .n{font-weight:700;margin-top:6px}
+.split{display:flex;height:30px;border-radius:9px;overflow:hidden;margin-top:16px;font-size:13px;font-weight:700}
+.split div{display:grid;place-items:center}
+.split .dev{color:#fff}
+.split .ho{border:2px dashed;border-left:0;border-radius:0 9px 9px 0}
+
+/* tabs */
+.tabs{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);flex-wrap:wrap}
+.tab{border:0;background:transparent;color:var(--muted);padding:9px 16px;border-radius:9px;font-weight:600;font-size:14.5px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+.tabpanel{margin-top:22px}
+.tabpanel[hidden]{display:none}
+.figure-frame{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);cursor:zoom-in}
+.figure-frame img{margin:0 auto;max-height:640px;width:auto}
+.caption{color:var(--muted);font-size:14px;margin-top:12px}
+
+/* charts */
+.chart-card{padding:26px}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.forest{width:100%;height:auto;overflow:visible}
+.forest text{fill:var(--ink-2);font-family:Inter,system-ui,sans-serif}
+.chart-note{font-size:13px;color:var(--muted);margin-top:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin-top:18px}
+.tbl th,.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:center}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl thead th{background:var(--brand-soft);color:var(--ink);font-weight:700;border-bottom:0}
+.tbl thead th:first-child{border-radius:10px 0 0 10px}
+.tbl thead th:last-child{border-radius:0 10px 10px 0}
+.tbl tbody tr:hover{background:var(--surface-2)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:middle}
+.scroll-x{overflow-x:auto}
+
+.bars{display:flex;flex-direction:column;gap:14px;margin-top:10px}
+.bar-row{display:grid;grid-template-columns:220px 1fr 64px;gap:14px;align-items:center;font-size:14.5px}
+.bar-track{position:relative;height:30px;background:var(--surface-2);border-radius:8px;overflow:hidden}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:8px;width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.bar-chance{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.5}
+.bar-val{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+
+.callout{display:flex;gap:18px;align-items:center;padding:22px;border-radius:var(--radius);background:linear-gradient(135deg,var(--spiral-soft),var(--surface));border:1px solid var(--line)}
+.callout .big{white-space:nowrap;font-size:40px;font-weight:800;color:var(--spiral);letter-spacing:-.02em;line-height:1}
+
+.heat{border-collapse:separate;border-spacing:6px;width:100%;font-size:14px}
+.heat th{font-weight:600;color:var(--muted);font-size:12.5px}
+.heat td{text-align:center;border-radius:10px;padding:14px 6px;font-weight:700;font-variant-numeric:tabular-nums}
+.heat td.lab{text-align:left;background:transparent;color:var(--ink);padding-left:0}
+
+/* gallery */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);padding:7px 14px;border-radius:999px;font-weight:600;font-size:14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.g-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:zoom-in;box-shadow:var(--shadow);transition:transform .15s}
+.g-item:hover{transform:translateY(-2px)}
+.g-item .thumb{background:#fff;aspect-ratio:16/10;display:grid;place-items:center;padding:8px}
+.g-item .thumb img{max-height:100%;width:auto}
+.g-item .cap{padding:12px 14px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+.g-item[hidden]{display:none}
+
+/* app */
+.app-card{display:grid;grid-template-columns:1.1fr .9fr;gap:0;padding:0;overflow:hidden}
+.app-card .l{padding:30px}
+.app-card .r{background:var(--side);color:#cbd5e1;padding:26px;display:flex;flex-direction:column;gap:14px}
+.mock{border-radius:12px;background:#0f1b36;border:1px solid rgba(255,255,255,.08);overflow:hidden}
+.mock .bar{display:flex;gap:6px;padding:10px 12px;background:#0a1430}
+.mock .bar i{width:10px;height:10px;border-radius:50%;background:#334155}
+.mock .body{padding:16px;font-size:13px}
+.mock .ttl{color:#fff;font-weight:700;font-size:15px;margin-bottom:8px}
+.mock .err{background:rgba(220,38,38,.18);color:#fecaca;padding:8px 10px;border-radius:8px;font-size:12px;margin-bottom:10px}
+.mock .sel{background:#14234a;border-radius:8px;padding:8px 10px;margin-bottom:8px;color:#e2e8f0}
+.mock .up{border:1.5px dashed #334a7a;border-radius:8px;padding:14px;text-align:center;color:#94a3b8}
+.steps{counter-reset:s;list-style:none;padding:0;margin:18px 0 0}
+.steps li{counter-increment:s;position:relative;padding-left:40px;margin-bottom:14px}
+.steps li:before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-weight:700;font-size:13px;display:grid;place-items:center}
+.codebox{position:relative;background:#0b1224;color:#e2e8f0;border-radius:12px;padding:46px 18px 16px;font-size:13.5px;overflow-x:auto;margin:0}
+.copy{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.08);color:#e2e8f0;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer}
+.copy:hover{background:rgba(255,255,255,.16)}
+.linkcard{display:flex;gap:14px;align-items:flex-start;text-decoration:none!important;color:var(--ink);transition:border-color .15s,transform .15s}
+.linkcard:hover{border-color:var(--brand);transform:translateY(-2px)}
+.linkcard .li{width:42px;height:42px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.linkcard b{display:block}
+.linkcard span{color:var(--muted);font-size:13.5px}
+footer{padding:36px 0 50px;color:var(--muted);font-size:13.5px}
+
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(2,6,23,.86);display:none;align-items:center;justify-content:center;z-index:100;padding:30px;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:min(1400px,96vw);max-height:88vh;background:#fff;border-radius:12px;padding:12px}
+.lightbox .lb-cap{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:#e2e8f0;font-size:14px}
+.lightbox .close{position:absolute;top:16px;right:18px;background:rgba(255,255,255,.12);border:0;color:#fff;width:42px;height:42px;border-radius:50%;font-size:22px;cursor:pointer}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:10px;font-weight:600;font-size:14px;opacity:0;transition:all .25s;z-index:120;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .6s,transform .6s}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.bar-fill{transition:none}.dot.live{animation:none}}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.gallery{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:900px){
+  .sidebar{transform:translateX(-100%)}
+  body.nav-open .sidebar{transform:none}
+  body.nav-open .scrim{display:block;position:fixed;inset:0;background:rgba(2,6,23,.5);z-index:35}
+  .topbar{display:flex}
+  .main{margin-left:0}
+  .wrap{padding:0 20px}
+  .toolbar{display:none}
+  .g3,.g2{grid-template-columns:1fr}
+  .app-card{grid-template-columns:1fr}
+  .bar-row{grid-template-columns:1fr 56px}
+  .bar-row .bl{grid-column:1/-1}
+  section{padding:44px 0}
+}
+@media (max-width:560px){.g4{grid-template-columns:1fr}.gallery{grid-template-columns:1fr}.btn{padding:10px 14px}}
+</style>
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<aside class="sidebar" id="sidebar" aria-label="Site navigation">
+  <div class="brand">
+    <div class="brand-logo">
+      <svg width="24" height="24" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><path d="M32 10C20 10 13 19 13 30c0 14 9 23 19 24 10-1 19-10 19-24 0-11-7-20-19-20z"/><path d="M32 12v40M21 22q7 5 2 11-5 6 2 11M43 22q-7 5-2 11 5 6-2 11"/></svg>
+    </div>
+    <div><b>PD Audit</b><span>Voice · Spiral · MRI</span></div>
+  </div>
+  <nav class="nav" id="nav">
+    <div class="group">Paper</div>
+    <a href="#overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Overview</a>
+    <a href="#findings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>Key findings</a>
+    <a href="#data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Datasets</a>
+    <a href="#pipeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><path d="M10 6.5h4a3 3 0 0 1 3 3V14"/></svg>Pipeline</a>
+    <div class="group">Results</div>
+    <a href="#results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Results explorer</a>
+    <a href="#spiral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 12a1.5 1.5 0 1 1 1.5 1.5A3.5 3.5 0 1 1 17 10a5.5 5.5 0 1 1-5.5-5.5"/></svg>Spiral confound</a>
+    <a href="#leakage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.5S5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.5-7-12.5z"/></svg>Speaker leakage</a>
+    <a href="#power"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Power</a>
+    <a href="#figures"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>Figure gallery</a>
+    <div class="group">Resources</div>
+    <a href="#app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3M10 9l4 2-4 2z"/></svg>Live app</a>
+    <a href="#code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Code &amp; data</a>
+    <a href="#cite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h4v4H7zM7 11c0 3-1 5-3 6M15 7h4v4h-4zM15 11c0 3-1 5-3 6"/></svg>Cite</a>
+  </nav>
+  <div class="side-foot">
+    <div class="status"><span class="dot" id="appDot"></span><span id="appStatus">Demo app</span></div>
+    <a class="btn btn-side primary js-app" href="#app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Launch app</a>
+    <a class="btn btn-side js-repo" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub</a>
+  </div>
+</aside>
+<div class="scrim" id="scrim"></div>
+
+<!-- ================= MAIN ================= -->
+<div class="main">
+  <div class="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <b>PD Audit</b>
+    <button class="icon-btn js-theme" aria-label="Toggle dark mode"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+  <div class="toolbar">
+    <button class="icon-btn js-theme" aria-label="Toggle dark mode" title="Toggle dark mode"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+
+  <div class="wrap">
+  <!-- ---------- HERO ---------- -->
+  <section id="overview" class="hero">
+    <div class="badges">
+      <span class="badge blue">Research audit · 2026</span>
+      <span class="badge red">Negative result</span>
+      <span class="badge">Subject-level validation</span>
+      <span class="badge">Reproducible pipeline</span>
+    </div>
+    <h1>Subject-Level Validation of Independent Voice, Spiral-Drawing and T1-Weighted MRI Classifiers for Parkinson’s Disease</h1>
+    <p class="lead">An audit of three small public cohorts. When repeated recordings, adaptive model selection and acquisition differences are controlled, how much Parkinson’s discrimination is left?</p>
+    <p class="authors"><b>Romana Rahman</b> and <b>Nahid Islam Nayem</b><small>Department of Computer Science and Engineering, Khwaja Yunus Ali University, Sirajganj, Bangladesh</small></p>
+    <div class="btn-row">
+      <a class="btn btn-primary js-app" href="#app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3l14 9-14 9z"/></svg>Launch live app</a>
+      <a class="btn btn-ghost js-repo" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>View code</a>
+      <a class="btn btn-ghost js-paper" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg>Paper (PDF)</a>
+      <a class="btn btn-ghost" href="#cite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h4v4H7zM7 11c0 3-1 5-3 6M15 7h4v4h-4zM15 11c0 3-1 5-3 6"/></svg>Cite</a>
+    </div>
+    <div class="notice">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>
+      <p><b>Research use only.</b> Nothing on this page or in the demo app is a medical device or a diagnostic tool. Scores are uncalibrated, and no modality showed discrimination that was clearly different from chance or confounding at these sample sizes.</p>
+    </div>
+  </section>
+
+  <!-- ---------- FINDINGS ---------- -->
+  <section id="findings" class="reveal">
+    <div class="eyebrow">Key findings</div>
+    <h2>At these sample sizes, nothing clearly beats chance</h2>
+    <p class="sub">Primary analysis: fixed logistic regression, balanced accuracy (BA) averaged over ten subject-grouped partitions, compared with 1,000 permutations on the same partitions.</p>
+    <div class="grid g4">
+      <div class="card stat"><span class="bar" style="background:var(--voice)"></span>
+        <div class="k"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg> Voice</div><div class="v" style="color:var(--voice)">0.63</div>
+        <div class="d">BA · two-sided <i>p</i> = 0.23</div><span class="pill ns">Not different from chance</span></div>
+      <div class="card stat"><span class="bar" style="background:var(--spiral)"></span>
+        <div class="k"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 12a1.5 1.5 0 1 1 1.5 1.5A3.5 3.5 0 1 1 17 10a5.5 5.5 0 1 1-5.5-5.5"/></svg> Spiral</div><div class="v" style="color:var(--spiral)">0.64</div>
+        <div class="d">BA · one-sided <i>p</i> = 0.039</div><span class="pill warn">Nominal &amp; confounded</span></div>
+      <div class="card stat"><span class="bar" style="background:var(--mri)"></span>
+        <div class="k"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4C8 4 5 7 5 11c0 5 3 9 7 9s7-4 7-9c0-4-3-7-7-7zM12 5v14"/></svg> T1 MRI</div><div class="v" style="color:var(--mri)">0.46</div>
+        <div class="d">BA · two-sided <i>p</i> = 0.66</div><span class="pill ns">No signal detected</span></div>
+      <div class="card stat"><span class="bar" style="background:var(--bad)"></span>
+        <div class="k"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2.5S5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.5-7-12.5z"/></svg> Speaker leakage</div><div class="v" style="color:var(--bad);font-size:30px;white-space:nowrap">+0.14–0.24</div>
+        <div class="d">BA gained by splitting voice by recording</div><span class="pill bad">Inflation</span></div>
+    </div>
+  </section>
+
+  <!-- ---------- DATA ---------- -->
+  <section id="data" class="reveal">
+    <div class="eyebrow">Datasets</div>
+    <h2>Three public cohorts, audited separately</h2>
+    <p class="sub">The cohorts are unpaired: they contain different people, so no fusion is attempted. Each has a development set (used for all cross-validation) and a small retrospective hold-out that is reported descriptively only.</p>
+    <div class="grid g3">
+      <div class="card">
+        <div class="cohort"><div class="ico" style="background:var(--voice-soft)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="70" height="70" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="14" y="6" width="18" height="32" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="3"/>
+      <line x1="19" y1="16" x2="27" y2="16" stroke="#2563eb" stroke-width="2" opacity=".5"/>
+      <line x1="19" y1="22" x2="27" y2="22" stroke="#2563eb" stroke-width="2" opacity=".5"/>
+      <line x1="19" y1="28" x2="27" y2="28" stroke="#2563eb" stroke-width="2" opacity=".5"/>
+      <path d="M8 30 a15 15 0 0 0 30 0" stroke="#2563eb" stroke-width="3"/>
+      <line x1="23" y1="45" x2="23" y2="55" stroke="#2563eb" stroke-width="3"/>
+      <line x1="14" y1="56" x2="32" y2="56" stroke="#2563eb" stroke-width="3"/><rect x="44" y="27.0" width="3" height="10" rx="1.5" fill="#2563eb" opacity="0.55"/><rect x="49" y="21.0" width="3" height="22" rx="1.5" fill="#2563eb" opacity="0.8"/><rect x="54" y="25.0" width="3" height="14" rx="1.5" fill="#2563eb" opacity="0.65"/><rect x="59" y="29.0" width="3" height="6" rx="1.5" fill="#2563eb" opacity="0.45"/></svg></div>
+          <div><h3>Voice</h3><div class="meta">UCI · sustained /a/</div><div class="n" style="color:var(--voice)">24 PD · 8 HC</div></div></div>
+        <div class="split"><div class="dev" style="flex:24;background:var(--voice)">Train 24</div><div class="ho" style="flex:8;color:var(--voice)">8</div></div>
+        <div class="caption">32 identifiers · 195 recordings · 22 acoustic features</div>
+      </div>
+      <div class="card">
+        <div class="cohort"><div class="ico" style="background:var(--spiral-soft)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="70" height="70" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="56" height="56" rx="8" fill="#ffffff"/>
+      <path d="M30.0 34.0 L30.3 34.1 L30.5 34.2 L30.4 34.3 L30.2 34.4 L30.0 34.4 L30.0 34.5 L30.1 34.6 L30.4 34.9 L30.5 35.2 L30.5 35.4 L30.4 35.4 L30.2 35.4 L30.0 35.3 L29.9 35.4 L29.9 35.7 L29.9 36.1 L29.8 36.4 L29.7 36.6 L29.5 36.5 L29.3 36.3 L29.1 36.2 L28.9 36.3 L28.7 36.5 L28.5 36.8 L28.2 37.0 L28.0 37.1 L27.8 36.9 L27.7 36.6 L27.6 36.4 L27.3 36.4 L27.0 36.4 L26.6 36.5 L26.2 36.5 L26.0 36.3 L26.0 36.0 L26.0 35.7 L26.0 35.5 L25.8 35.3 L25.4 35.1 L25.0 34.9 L24.7 34.7 L24.7 34.4 L24.8 34.1 L25.0 33.8 L25.1 33.5 L25.0 33.2 L24.8 32.8 L24.6 32.4 L24.5 32.0 L24.7 31.7 L25.0 31.4 L25.4 31.3 L25.6 31.0 L25.7 30.7 L25.7 30.2 L25.8 29.7 L26.1 29.3 L26.4 29.2 L26.9 29.2 L27.3 29.2 L27.6 29.1 L27.9 28.8 L28.3 28.4 L28.7 28.0 L29.1 27.9 L29.5 28.0 L29.9 28.3 L30.3 28.5 L30.7 28.6 L31.2 28.5 L31.8 28.4 L32.3 28.3 L32.8 28.5 L33.1 28.9 L33.3 29.3 L33.5 29.7 L33.9 30.0 L34.4 30.3 L34.9 30.5 L35.4 30.8 L35.7 31.3 L35.7 31.8 L35.7 32.3 L35.7 32.9 L35.9 33.3 L36.2 33.8 L36.5 34.4 L36.7 34.9 L36.6 35.5 L36.4 36.0 L36.0 36.5 L35.8 37.0 L35.6 37.5 L35.6 38.1 L35.6 38.8 L35.4 39.4 L35.0 39.8 L34.4 40.1 L33.8 40.4 L33.3 40.7 L32.9 41.1 L32.5 41.7 L32.1 42.2 L31.5 42.6 L30.9 42.7 L30.2 42.6 L29.6 42.5 L28.9 42.5 L28.3 42.7 L27.6 43.0 L26.9 43.1 L26.2 43.1 L25.6 42.8 L25.0 42.4 L24.5 41.9 L23.9 41.6 L23.3 41.4 L22.5 41.2 L21.8 40.9 L21.2 40.4 L20.8 39.8 L20.6 39.1 L20.4 38.4 L20.1 37.8 L19.6 37.2 L19.0 36.6 L18.6 35.9 L18.4 35.2 L18.5 34.4 L18.7 33.6 L18.8 32.9 L18.9 32.1 L18.8 31.3 L18.6 30.5 L18.7 29.6 L19.0 28.9 L19.5 28.2 L20.1 27.7 L20.7 27.1 L21.1 26.4 L21.5 25.7 L21.9 24.9 L22.5 24.2 L23.2 23.7 L24.0 23.5 L24.9 23.3 L25.7 23.1 L26.4 22.8 L27.2 22.3 L28.0 21.9 L28.9 21.6 L29.8 21.7 L30.7 21.9 L31.5 22.3 L32.4 22.5 L33.3 22.6 L34.2 22.7 L35.2 22.8 L36.1 23.1 L36.8 23.7 L37.4 24.5 L38.0 25.2 L38.6 25.9 L39.3 26.5 L40.1 27.1 L40.9 27.8 L41.4 28.6 L41.7 29.5 L41.8 30.5 L41.9 31.5 L42.0 32.4 L42.4 33.4 L42.7 34.3 L42.9 35.4 L42.9 36.4 L42.6 37.4 L42.1 38.3 L41.7 39.2 L41.3 40.1 L41.0 41.1 L40.8 42.2 L40.4 43.2 L39.7 44.0 L38.9 44.7 L37.9 45.2 L37.0 45.8 L36.2 46.4 L35.4 47.1 L34.6 47.9 L33.6 48.5 L32.6 48.8 L31.5 48.9 L30.4 48.8 L29.3 48.8 L28.2 48.9 L27.1 49.1 L25.9 49.3 L24.7 49.2 L23.6 48.9 L22.6 48.3 L21.7 47.6 L20.8 47.0 L19.8 46.5 L18.7 46.0 L17.6 45.5 L16.6 44.7 L15.9 43.8 L15.4 42.7 L14.9 41.6 L14.4 40.6 L13.8 39.6 L13.1 38.5 L12.5 37.4 L12.2 36.3 L12.1 35.0 L12.3 33.8 L12.5 32.6 L12.6 31.4 L12.7 30.2 L12.7 28.9 L12.8 27.6 L13.2 26.4 L13.9 25.3 L14.7 24.3 L15.6 23.4 L16.3 22.4 L17.0 21.4 L17.8 20.3 L18.6 19.3 L19.7 18.5 L20.9 17.9 L22.2 17.6 L23.4 17.2 L24.6 16.8 L25.8 16.3 L27.1 15.7 L28.4 15.4 L29.8 15.3 L31.1 15.6 L32.4 16.0 L33.7 16.4 L35.0 16.7 L36.4 16.9 L37.8 17.1 L39.1 17.6 L40.3 18.4 L41.3 19.4 L42.2 20.4 L43.1 21.5 L44.0 22.4 L45.1 23.4 L46.1 24.4 L47.0 25.6 L47.5 27.0 L47.8 28.4 L48.0 29.8 L48.2 31.2 L48.5 32.6 L48.9 34.0" stroke="#0d9488" stroke-width="2.2"/>
+      <g transform="translate(48.9 34.0) rotate(28)">
+        <rect x="-2.5" y="-20" width="5" height="16" rx="1.5" fill="#334155"/>
+        <path d="M-2.5 -4 L0 1 L2.5 -4 Z" fill="#334155"/>
+      </g></svg></div>
+          <div><h3>Spiral drawing</h3><div class="meta">UCI · Wacom tablet</div><div class="n" style="color:var(--spiral)">25 PD · 15 HC</div></div></div>
+        <div class="split"><div class="dev" style="flex:32;background:var(--spiral)">Train 32</div><div class="ho" style="flex:8;color:var(--spiral)">8</div></div>
+        <div class="caption">40 files · 12 shape features · +37 PD-only files for audits</div>
+      </div>
+      <div class="card">
+        <div class="cohort"><div class="ico" style="background:#000"><img class="mri" src="assets/mri_axial.png" alt="Axial T1-weighted MRI slice"></div>
+          <div><h3>T1 MRI</h3><div class="meta">NEUROCON · 1.5 T</div><div class="n" style="color:var(--mri)">27 PD · 16 HC</div></div></div>
+        <div class="split"><div class="dev" style="flex:32;background:var(--mri)">Train 32</div><div class="ho" style="flex:11;color:var(--mri)">11</div></div>
+        <div class="caption">43 subjects · voxel + frozen MedicalNet 3D features</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- PIPELINE ---------- -->
+  <section id="pipeline" class="reveal">
+    <div class="eyebrow">Method</div>
+    <h2>How the analysis is built</h2>
+    <p class="sub">Every preprocessing and selection step is fitted inside training folds only. Click a diagram to enlarge it.</p>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="t1">Study design</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="t2">Nested CV</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="t3">MRI pipeline</button>
+    </div>
+    <div class="tabpanel" id="t1"><div class="figure-frame js-zoom" data-cap="Analysis structure: three cohorts, primary and secondary analyses, and outputs."><img src="assets/fig_analysis_structure.png" alt="Analysis structure diagram" loading="lazy"></div>
+      <p class="caption">Each cohort is split into a development set and a hold-out. Both the fixed-LR primary analysis and the nested secondary analysis run on the development set only.</p></div>
+    <div class="tabpanel" id="t2" hidden><div class="figure-frame js-zoom" data-cap="Repeated nested cross-validation with a full-pipeline permutation null."><img src="assets/fig_nested_cv.png" alt="Nested cross-validation diagram" loading="lazy" style="max-height:620px"></div>
+      <p class="caption">Ten random partitions × three outer folds. All tuning happens in the inner CV. The permutation null re-runs the whole procedure on shuffled labels.</p></div>
+    <div class="tabpanel" id="t3" hidden><div class="figure-frame js-zoom" data-cap="Diagnosis-blind T1 MRI preprocessing, feature branches and QC."><img src="assets/fig_mri_pipeline.png" alt="MRI preprocessing pipeline diagram" loading="lazy" style="max-height:620px"></div>
+      <p class="caption">SynthStrip → N4 → rigid MNI152 (2 mm) → intensity normalisation, then voxel and MedicalNet branches. Automated QC defines the QC-pass sensitivity set.</p></div>
+  </section>
+
+  <!-- ---------- RESULTS ---------- -->
+  <section id="results" class="reveal">
+    <div class="eyebrow">Results explorer</div>
+    <h2>Observed balanced accuracy against its permutation null</h2>
+    <p class="sub">Switch between the two analyses. Each dot is the mean over ten partitions (bar = ± SD). The grey band is the 95% interval of the permutation null; the dashed line is chance (0.5).</p>
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div class="tabs" role="tablist" id="anaTabs">
+          <button class="tab" role="tab" aria-selected="true" data-ana="primary">Primary · fixed LR</button>
+          <button class="tab" role="tab" aria-selected="false" data-ana="nested">Secondary · nested CV</button>
+        </div>
+        <div class="legend">
+          <span><i style="width:16px;height:10px;background:var(--null);opacity:.35;border-radius:3px"></i>Null 95% interval</span>
+          <span><i style="width:10px;height:10px;border-radius:50%;background:var(--ink-2)"></i>Observed mean ± SD</span>
+          <span><i style="width:16px;border-top:2px dashed var(--muted)"></i>Chance</span>
+        </div>
+      </div>
+      <svg class="forest" id="forest" viewBox="0 0 900 300" role="img" aria-label="Balanced accuracy against permutation null"></svg>
+      <div class="scroll-x"><table class="tbl" id="resTable"></table></div>
+      <p class="chart-note" id="resNote"></p>
+    </div>
+  </section>
+
+  <!-- ---------- SPIRAL ---------- -->
+  <section id="spiral" class="reveal">
+    <div class="eyebrow">Confounding audit</div>
+    <h2>The spiral signal is mostly the recording device</h2>
+    <p class="sub">PD and control spirals were recorded with different sampling intervals. Acquisition descriptors alone classify almost perfectly, and the shape signal disappears once acquisition is regressed out.</p>
+    <div class="grid g2">
+      <div class="callout"><div class="big">39 / 40</div><div><b>files separated by one timestamp interval</b><br><span style="color:var(--muted);font-size:14px">The 8-ms line splits original PD and control files almost perfectly. The PD-only cohort was sampled at 7 ms, like the controls.</span></div></div>
+      <div class="callout" style="background:linear-gradient(135deg,var(--bad-soft),var(--surface))"><div class="big" style="color:var(--bad)">0.60</div><div><b>transfer AUC</b><br><span style="color:var(--muted);font-size:14px">A model trained on PD-only vs. matched controls did not transfer to the original PD files, and PD-vs-PD reached BA 0.68.</span></div></div>
+    </div>
+    <div class="card chart-card" style="margin-top:18px">
+      <h3>Acquisition-controlled repeated CV (BA, 10 partitions × 3 folds)</h3>
+      <div class="bars" id="acqBars"></div>
+      <p class="chart-note">The dark tick marks chance (BA 0.5).</p>
+    </div>
+  </section>
+
+  <!-- ---------- LEAKAGE ---------- -->
+  <section id="leakage" class="reveal">
+    <div class="eyebrow">Controlled experiment</div>
+    <h2>Splitting voice by recording inflates accuracy</h2>
+    <p class="sub">Same 22 features, same models, same three-fold structure — only the splitting unit changes. With recording-level folds, the same speakers appear in both training and test sets.</p>
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div class="tabs" role="tablist" id="leakTabs">
+          <button class="tab" role="tab" aria-selected="true" data-m="BA">Balanced accuracy</button>
+          <button class="tab" role="tab" aria-selected="false" data-m="AUC">AUC</button>
+        </div>
+        <div class="legend">
+          <span><i style="width:12px;height:12px;border-radius:3px;background:var(--bad)"></i>Recording-level, 80/20</span>
+          <span><i style="width:12px;height:12px;border-radius:3px;background:var(--warn)"></i>Recording-level, 3-fold</span>
+          <span><i style="width:12px;height:12px;border-radius:3px;background:var(--good)"></i>Subject-level, 3-fold</span>
+        </div>
+      </div>
+      <svg class="forest" id="leakChart" viewBox="0 0 900 300" role="img" aria-label="Voice performance by splitting unit"></svg>
+      <p class="chart-note">Shared identifiers between train and test (mean of 10 seeds): 22.8 (80/20), 29.4 (recording 3-fold), 0 (subject 3-fold).</p>
+    </div>
+  </section>
+
+  <!-- ---------- POWER ---------- -->
+  <section id="power" class="reveal">
+    <div class="eyebrow">Power simulation</div>
+    <h2>Only large effects were detectable</h2>
+    <p class="sub">Probability that the primary test rejects the null when an effect of size Δ is injected (200 simulations per cell). The Δ = 0 column is the type I error rate.</p>
+    <div class="card chart-card scroll-x"><table class="heat" id="heat"></table></div>
+  </section>
+
+  <!-- ---------- GALLERY ---------- -->
+  <section id="figures" class="reveal">
+    <div class="eyebrow">Figure gallery</div>
+    <h2>Figures from the repository</h2>
+    <p class="sub">Filter by modality, then click any figure to open it full size.</p>
+    <div class="chips" id="chips">
+      <button class="chip" aria-pressed="true" data-f="all">All</button>
+      <button class="chip" aria-pressed="false" data-f="voice">Voice</button>
+      <button class="chip" aria-pressed="false" data-f="spiral">Spiral</button>
+      <button class="chip" aria-pressed="false" data-f="mri">MRI</button>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <!-- ---------- APP ---------- -->
+  <section id="app" class="reveal">
+    <div class="eyebrow">Live demo</div>
+    <h2>Try the research demo app</h2>
+    <p class="sub">A Streamlit app that runs the locked voice, spiral and MRI models on your own files. It is meant for reproducing the study, not for diagnosis.</p>
+    <div class="card app-card">
+      <div class="l">
+        <h3>What you can do</h3>
+        <ol class="steps">
+          <li><b>Choose a modality.</b> Voice (acoustic-feature CSV), spiral (raw tablet TXT or feature CSV) or T1 MRI (normalised NPY + metadata JSON).</li>
+          <li><b>Download the input template</b> and fill it in, or upload a file produced by the notebook.</li>
+          <li><b>Get an uncalibrated research score</b> with input validation and the study’s quality flags.</li>
+        </ol>
+        <div class="btn-row" style="margin-top:20px">
+          <a class="btn btn-primary js-app-direct" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3l14 9-14 9z"/></svg><span class="js-app-label">Open the app</span></a>
+          <a class="btn btn-ghost js-repo-app" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>App source</a>
+        </div>
+        <p class="chart-note js-app-hint"></p>
+        <h3 style="margin-top:24px">Run it locally</h3>
+        <pre class="codebox"><button class="copy" data-copy="run">Copy</button><code id="run">git clone https://github.com/RomanaRahman11/Parkinson_Disease_Final.git
+cd Parkinson_Disease_Final/PD_Research_App
+pip install -r requirements.txt
+streamlit run app.py</code></pre>
+      </div>
+      <div class="r">
+        <div class="mock" aria-hidden="true">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="body">
+            <div class="ttl">🧠 Parkinson’s disease — research demo</div>
+            <div class="err">RESEARCH ONLY — not a medical device. Scores are uncalibrated.</div>
+            <div class="sel">Modality ▾ &nbsp; Voice (acoustic-feature CSV)</div>
+            <div class="up">⬆ Drag and drop file here</div>
+          </div>
+        </div>
+        <div style="font-size:13.5px">Built with <b style="color:#fff">Streamlit</b>, <b style="color:#fff">scikit-learn</b> and <b style="color:#fff">PyTorch</b>. The MRI branch uses frozen MedicalNet ResNet-18 weights.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- CODE ---------- -->
+  <section id="code" class="reveal">
+    <div class="eyebrow">Code &amp; data</div>
+    <h2>Everything is in the repository</h2>
+    <p class="sub">Notebook, app, figures, tables and the revision analyses.</p>
+    <div class="grid g2">
+      <a class="card linkcard js-path" data-path="tree/main/PD_Research_App" href="#" target="_blank" rel="noopener"><div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></div><div><b>PD_Research_App</b><span>Streamlit demo, locked model bundles, MRI preprocessing and validation code.</span></div></a>
+      <a class="card linkcard js-path" data-path="tree/main/figures" href="#" target="_blank" rel="noopener"><div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div><div><b>figures</b><span>Learning curves, model comparisons, out-of-fold and hold-out plots (PNG + PDF).</span></div></a>
+      <a class="card linkcard js-path" data-path="tree/main/tables" href="#" target="_blank" rel="noopener"><div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></div><div><b>tables</b><span>Per-fold scores, inner searches, QC, hashes and provenance files.</span></div></a>
+      <a class="card linkcard js-path" data-path="tree/main/revision" href="#" target="_blank" rel="noopener"><div class="li"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg></div><div><b>revision</b><span>Repeated nested CV, full-pipeline permutations, sensitivity and acquisition analyses.</span></div></a>
+    </div>
+  </section>
+
+  <!-- ---------- CITE ---------- -->
+  <section id="cite" class="reveal">
+    <div class="eyebrow">Cite</div>
+    <h2>How to cite this work</h2>
+    <p class="sub">Please update the entry once the paper has a venue and DOI.</p>
+    <pre class="codebox"><button class="copy" data-copy="bib">Copy BibTeX</button><code id="bib">@misc{rahman2026pdaudit,
+  title  = {Subject-Level Validation of Independent Voice, Spiral-Drawing
+            and T1-Weighted MRI Classifiers for Parkinson's Disease:
+            An Audit of Small Public Cohorts},
+  author = {Rahman, Romana and Nayem, Nahid Islam},
+  year   = {2026},
+  note   = {Manuscript. Code: https://github.com/RomanaRahman11/Parkinson_Disease_Final}
+}</code></pre>
+  </section>
+
+  <footer>
+    <div>© 2026 Romana Rahman and Nahid Islam Nayem · Khwaja Yunus Ali University.</div>
+    <div>Research use only — not a medical device. Datasets: UCI Parkinson’s voice, UCI spiral drawing, NEUROCON (see paper for references and licences).</div>
+  </footer>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged figure">
+  <button class="close" aria-label="Close">×</button>
+  <img id="lbImg" alt="">
+  <div class="lb-cap" id="lbCap"></div>
+</div>
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+/* ====================== CONFIG — edit these ====================== */
+const CONFIG = {
+  repoUrl:  "https://github.com/RomanaRahman11/Parkinson_Disease_Final",
+  appUrl:   "",          // paste your Streamlit link here, e.g. "https://pd-audit.streamlit.app"
+  paperUrl: ""           // paste a PDF / arXiv link here (leave empty to hide the button)
+};
+/* ================================================================== */
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---- links & app status ---- */
+$$(".js-repo").forEach(a => a.href = CONFIG.repoUrl);
+$$(".js-repo-app").forEach(a => a.href = CONFIG.repoUrl + "/tree/main/PD_Research_App");
+$$(".js-path").forEach(a => a.href = CONFIG.repoUrl + "/" + a.dataset.path);
+if (CONFIG.paperUrl) $$(".js-paper").forEach(a => a.href = CONFIG.paperUrl);
+else $$(".js-paper").forEach(a => a.remove());
+const appBtn = $(".js-app-direct");
+if (CONFIG.appUrl) {
+  appBtn.href = CONFIG.appUrl;
+  $$(".js-app").forEach(a => { a.href = CONFIG.appUrl; a.target = "_blank"; a.rel = "noopener"; });
+  $("#appDot").classList.add("live"); $("#appStatus").textContent = "Demo app is live";
+} else {
+  appBtn.setAttribute("aria-disabled", "true"); appBtn.removeAttribute("href");
+  $(".js-app-label").textContent = "App link coming soon";
+  $(".js-app-hint").textContent = "The hosted version is being deployed. Until then, run it locally with the commands below.";
+  $("#appStatus").textContent = "Demo app · deploying";
+}
+
+/* ---- theme ---- */
+const setTheme = t => { document.documentElement.dataset.theme = t; try { localStorage.setItem("pd-theme", t); } catch (e) {} drawAll(); };
+try { const t = localStorage.getItem("pd-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+$$(".js-theme").forEach(b => b.addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark")));
+
+/* ---- mobile nav ---- */
+$("#menuBtn").addEventListener("click", () => document.body.classList.toggle("nav-open"));
+$("#scrim").addEventListener("click", () => document.body.classList.remove("nav-open"));
+$$("#nav a").forEach(a => a.addEventListener("click", () => document.body.classList.remove("nav-open")));
+
+/* ---- scroll spy ---- */
+const links = $$("#nav a");
+const spy = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + e.target.id));
+}), { rootMargin: "-45% 0px -50% 0px" });
+$$("section[id]").forEach(s => spy.observe(s));
+
+/* ---- reveal ---- */
+const rv = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); rv.unobserve(e.target); } }), { threshold: .08 });
+$$(".reveal").forEach(s => rv.observe(s));
+
+/* ---- tabs (pipeline) ---- */
+$$("[data-tab]").forEach(b => b.addEventListener("click", () => {
+  $$("[data-tab]").forEach(x => x.setAttribute("aria-selected", x === b));
+  $$(".tabpanel").forEach(p => p.hidden = p.id !== b.dataset.tab);
+}));
+
+/* ---- lightbox ---- */
+const lb = $("#lightbox");
+const openLB = (src, cap) => { $("#lbImg").src = src; $("#lbCap").textContent = cap || ""; lb.classList.add("open"); };
+lb.addEventListener("click", () => lb.classList.remove("open"));
+document.addEventListener("keydown", e => { if (e.key === "Escape") lb.classList.remove("open"); });
+$$(".js-zoom").forEach(f => f.addEventListener("click", () => openLB($("img", f).src, f.dataset.cap)));
+
+/* ---- copy buttons ---- */
+const toast = msg => { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 1600); };
+$$(".copy").forEach(b => b.addEventListener("click", async () => {
+  const txt = $("#" + b.dataset.copy).textContent;
+  try { await navigator.clipboard.writeText(txt); toast("Copied to clipboard"); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($("#" + b.dataset.copy)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Press Ctrl+C to copy"); }
+}));
+
+/* ====================== DATA (from the paper's tables) ====================== */
+const RES = {
+  primary: { note: "Fixed L2 logistic regression (C = 1, balanced weights), threshold 0.5; partition seeds 7042–7051; B = 1,000 permutations on the same partitions. Minimum attainable p = 0.001. p-values are unadjusted.",
+    rows: [
+      { m: "Voice",  c: "--voice",  n: "24 (18/6)",  ba: .625, sd: .064, auc: "0.669 ± 0.075", lo: .330, hi: .728, p: "0.120", p2: "0.231" },
+      { m: "Spiral", c: "--spiral", n: "32 (20/12)", ba: .642, sd: .071, auc: "0.634 ± 0.091", lo: .347, hi: .653, p: "0.039", p2: "0.067" },
+      { m: "MRI",    c: "--mri",    n: "32 (20/12)", ba: .460, sd: .080, auc: "0.455 ± 0.071", lo: .353, hi: .655, p: "0.656", p2: "0.657" },
+      { m: "MRI, QC-pass", c: "--mri", n: "14 (10/4)", ba: .282, sd: .101, auc: "0.212 ± 0.124", lo: .280, hi: .785, p: "0.973", p2: "0.107" } ],
+    cols: ["Modality", "n (PD/ctrl)", "BA mean ± SD", "AUC mean ± SD", "Null 95% interval", "p (one-sided)", "p₂ (two-sided)"],
+    cells: r => [r.n, `${r.ba.toFixed(3)} ± ${r.sd.toFixed(3)}`, r.auc, `${r.lo.toFixed(3)}–${r.hi.toFixed(3)}`, r.p, r.p2] },
+  nested: { note: "Complete selection procedure (preprocessing, family, hyper-parameters and threshold) nested inside each outer fold; full-pipeline permutation null with B = 200 on partition 7042. The 10-partition-mean p is conservative.",
+    rows: [
+      { m: "Voice",  c: "--voice",  ba: .606, sd: .074, rng: "0.528–0.722", auc: "0.685 ± 0.094", lo: .278, hi: .750, p: "0.269", pp: "0.065–0.502" },
+      { m: "Spiral", c: "--spiral", ba: .692, sd: .094, rng: "0.567–0.858", auc: "0.742 ± 0.072", lo: .341, hi: .709, p: "0.055", pp: "0.005–0.264" },
+      { m: "MRI",    c: "--mri",    ba: .449, sd: .058, rng: "0.342–0.542", auc: "0.429 ± 0.063", lo: .342, hi: .700, p: "0.741 (p₂ = 0.512)", pp: "0.308–0.980" } ],
+    cols: ["Modality", "BA mean ± SD", "BA range", "AUC mean ± SD", "Null 95% interval", "p (10-partition mean)", "Per-partition p"],
+    cells: r => [`${r.ba.toFixed(3)} ± ${r.sd.toFixed(3)}`, r.rng, r.auc, `${r.lo.toFixed(3)}–${r.hi.toFixed(3)}`, r.p, r.pp] }
+};
+const ACQ = [
+  { k: "Acquisition only (4 descriptors)", v: .958, c: "--bad" },
+  { k: "Shape + acquisition", v: .921, c: "--warn" },
+  { k: "Shape only", v: .643, c: "--spiral" },
+  { k: "Shape residualised on acquisition", v: .513, c: "--null" } ];
+const LEAK = { models: ["RBF-SVM", "RF", "LR"],
+  BA:  { r80: [.874, .842, .755], r3: [.827, .825, .776], s3: [.588, .612, .633] },
+  AUC: { r80: [.963, .947, .901], r3: [.942, .950, .893], s3: [.597, .752, .706] } };
+const POWER = { cols: ["0 (0.50)", "0.5 (0.60)", "1.0 (0.69)", "1.5 (0.77)", "2.0 (0.84)", "2.5 (0.89)"],
+  rows: [["Voice", [.060, .16, .18, .58, .72, .87]], ["Spiral", [.040, .28, .60, .96, 1.00, 1.00]], ["MRI", [.035, .13, .21, .41, .73, .88]]] };
+const GALLERY = [
+  ["voice", "voice_four_models.png", "Voice · four model families"], ["voice", "voice_selection_oof.png", "Voice · out-of-fold selection"],
+  ["voice", "voice_selected_holdout.png", "Voice · hold-out (descriptive)"], ["voice", "voice_baseline_learning_curve.png", "Voice · learning curve"],
+  ["spiral", "spiral_acquisition_control.png", "Spiral · acquisition control"], ["spiral", "spiral_four_models.png", "Spiral · four model families"],
+  ["spiral", "spiral_selection_oof.png", "Spiral · out-of-fold selection"], ["spiral", "spiral_selected_holdout.png", "Spiral · hold-out (descriptive)"],
+  ["spiral", "spiral_baseline_learning_curve.png", "Spiral · learning curve"],
+  ["mri", "mri_four_models.png", "MRI · four model families"], ["mri", "mri_selection_oof.png", "MRI · out-of-fold selection"],
+  ["mri", "mri_selected_holdout.png", "MRI · hold-out (descriptive)"], ["mri", "mri_baseline_learning_curve.png", "MRI · learning curve"] ];
+
+/* ====================== CHARTS ====================== */
+const NS = "http://www.w3.org/2000/svg";
+const el = (t, a = {}, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; };
+let ANA = "primary", METRIC = "BA";
+
+function drawForest() {
+  const d = RES[ANA], svg = $("#forest"); svg.innerHTML = "";
+  const W = 900, L = 150, R = 30, top = 34, rowH = 62, H = top + d.rows.length * rowH + 40;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const x = v => L + (v - 0.0) / 1.0 * (W - L - R);
+  for (let t = 0; t <= 1.0001; t += .1) {
+    svg.append(el("line", { x1: x(t), x2: x(t), y1: top - 10, y2: H - 34, stroke: css("--line"), "stroke-width": 1 }));
+    svg.append(el("text", { x: x(t), y: H - 12, "text-anchor": "middle", "font-size": 13, fill: css("--muted") }, t.toFixed(1)));
+  }
+  svg.append(el("text", { x: W - R, y: 16, "text-anchor": "end", "font-size": 13, fill: css("--muted") }, "Balanced accuracy →"));
+  svg.append(el("line", { x1: x(.5), x2: x(.5), y1: top - 14, y2: H - 34, stroke: css("--muted"), "stroke-width": 2, "stroke-dasharray": "5 5" }));
+  d.rows.forEach((r, i) => {
+    const cy = top + i * rowH + rowH / 2, col = css(r.c);
+    svg.append(el("rect", { x: x(r.lo), y: cy - 15, width: x(r.hi) - x(r.lo), height: 30, rx: 8, fill: css("--null"), opacity: .28 }));
+    const g = el("g", { style: "transition:opacity .4s" });
+    g.append(el("line", { x1: x(r.ba - r.sd), x2: x(r.ba + r.sd), y1: cy, y2: cy, stroke: col, "stroke-width": 3.5, "stroke-linecap": "round" }));
+    g.append(el("circle", { cx: x(r.ba), cy, r: 9, fill: col, stroke: css("--surface"), "stroke-width": 3 }));
+    g.append(el("text", { x: x(r.ba + r.sd) + 12, y: cy + 5, "font-size": 14, "font-weight": 700, fill: col }, r.ba.toFixed(3)));
+    svg.append(g);
+    svg.append(el("text", { x: 0, y: cy + 5, "font-size": 15, "font-weight": 600, fill: css("--ink") }, r.m));
+  });
+  const t = $("#resTable");
+  t.innerHTML = `<thead><tr>${d.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${
+    d.rows.map(r => `<tr><td><span class="sw" style="background:var(${r.c})"></span>${r.m}</td>${d.cells(r).map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  $("#resNote").textContent = d.note;
+}
+$$("[data-ana]").forEach(b => b.addEventListener("click", () => {
+  $$("[data-ana]").forEach(x => x.setAttribute("aria-selected", x === b)); ANA = b.dataset.ana; drawForest();
+}));
+
+function drawAcq() {
+  const box = $("#acqBars"); box.innerHTML = "";
+  ACQ.forEach(a => {
+    const row = document.createElement("div"); row.className = "bar-row";
+    row.innerHTML = `<div class="bl">${a.k}</div><div class="bar-track"><div class="bar-fill" style="background:var(${a.c})"></div><div class="bar-chance" style="left:50%"></div></div><div class="bar-val">${a.v.toFixed(3)}</div>`;
+    box.append(row);
+    requestAnimationFrame(() => requestAnimationFrame(() => { $(".bar-fill", row).style.width = (a.v * 100) + "%"; }));
+  });
+}
+
+function drawLeak() {
+  const svg = $("#leakChart"); svg.innerHTML = "";
+  const d = LEAK[METRIC], W = 900, H = 320, L = 50, R = 20, top = 20, bot = 50;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const y = v => top + (1 - v) * (H - top - bot);
+  for (let t = 0; t <= 1.0001; t += .25) {
+    svg.append(el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), stroke: css("--line") }));
+    svg.append(el("text", { x: L - 10, y: y(t) + 4, "text-anchor": "end", "font-size": 12, fill: css("--muted") }, t.toFixed(2)));
+  }
+  svg.append(el("line", { x1: L, x2: W - R, y1: y(.5), y2: y(.5), stroke: css("--muted"), "stroke-width": 1.5, "stroke-dasharray": "5 5" }));
+  const keys = [["r80", "--bad"], ["r3", "--warn"], ["s3", "--good"]];
+  const gw = (W - L - R) / LEAK.models.length, bw = 54, gap = 12;
+  LEAK.models.forEach((m, i) => {
+    const gx = L + i * gw + gw / 2 - (3 * bw + 2 * gap) / 2;
+    keys.forEach(([k, c], j) => {
+      const v = d[k][i], bx = gx + j * (bw + gap);
+      const rect = el("rect", { x: bx, y: y(0), width: bw, height: 0, rx: 7, fill: css(c) });
+      rect.style.transition = "all .7s cubic-bezier(.2,.8,.2,1)";
+      svg.append(rect);
+      requestAnimationFrame(() => requestAnimationFrame(() => { rect.setAttribute("y", y(v)); rect.setAttribute("height", y(0) - y(v)); }));
+      svg.append(el("text", { x: bx + bw / 2, y: y(v) - 8, "text-anchor": "middle", "font-size": 13, "font-weight": 700, fill: css("--ink-2") }, v.toFixed(2)));
+    });
+    svg.append(el("text", { x: L + i * gw + gw / 2, y: H - 18, "text-anchor": "middle", "font-size": 15, "font-weight": 600, fill: css("--ink") }, m));
+  });
+}
+$$("[data-m]").forEach(b => b.addEventListener("click", () => {
+  $$("[data-m]").forEach(x => x.setAttribute("aria-selected", x === b)); METRIC = b.dataset.m; drawLeak();
+}));
+
+function drawHeat() {
+  const t = $("#heat"), dark = document.documentElement.dataset.theme === "dark";
+  const shade = v => { const a = .08 + .82 * v; return dark ? `rgba(96,165,250,${a})` : `rgba(37,99,235,${a})`; };
+  t.innerHTML = `<thead><tr><th style="text-align:left">Δ (best BA)</th>${POWER.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${
+    POWER.rows.map(([m, vs]) => `<tr><td class="lab"><b>${m}</b></td>${vs.map(v => `<td style="background:${shade(v)};color:${v > .55 ? "#fff" : "var(--ink)"}" title="${m}: power ${v}">${v < .1 ? v.toFixed(3) : v.toFixed(2)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+}
+
+function drawGallery() {
+  const g = $("#gallery");
+  g.innerHTML = GALLERY.map(([k, f, cap]) =>
+    `<figure class="g-item" data-k="${k}" style="margin:0"><div class="thumb"><img src="figures/${f}" alt="${cap}" loading="lazy"></div><figcaption class="cap"><span class="sw" style="background:var(--${k})"></span>${cap}</figcaption></figure>`).join("");
+  $$(".g-item", g).forEach(it => it.addEventListener("click", () => openLB($("img", it).src, $(".cap", it).textContent)));
+}
+$$("#chips .chip").forEach(c => c.addEventListener("click", () => {
+  $$("#chips .chip").forEach(x => x.setAttribute("aria-pressed", x === c));
+  $$(".g-item").forEach(it => it.hidden = !(c.dataset.f === "all" || it.dataset.k === c.dataset.f));
+}));
+
+function drawAll() { drawForest(); drawLeak(); drawHeat(); }
+drawAll(); drawAcq(); drawGallery();
+</script>
+</body>
+</html>
